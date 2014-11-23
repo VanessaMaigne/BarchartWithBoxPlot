@@ -1,4 +1,4 @@
-/**
+/*!
  * barchartWithBoxPlot _ version 1.0 _ november 2014
  * This library create a barchart with box plot.
  * You can choose which variables you want to display, by adding or remove one by one.
@@ -26,6 +26,7 @@
  *           ...
  *       ]
  */
+
 barchartWithBoxPlot = function(containerId, width, height, data)
 {
     var _chart = new Object();
