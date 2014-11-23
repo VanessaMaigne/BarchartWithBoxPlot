@@ -4,14 +4,14 @@
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Barchart with Box Plot</title>
+    <title>Barchart with Box Plot (uncertainty)</title>
     <link rel="icon" href="https://avatars3.githubusercontent.com/u/6544448?s=460" type="image/png">
 
     <link rel="stylesheet" type="text/css" href="http://getbootstrap.com/dist/css/bootstrap.min.css">
 
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script type="text/javascript" src="d3.v3.min.js"></script>
-    <script type="text/javascript" src="barChartWithBoxPlot.js"></script>
+    <script type="text/javascript" src="barchartWithBoxPlot.js"></script>
 
     <style type="text/css">
         #pageWrapper {
@@ -19,26 +19,18 @@
             width: 1000px;
         }
 
-        h3 {
-            color: #5BC0DE;
-        }
-
-        h4 {
-            text-align: center;
-        }
-
-        .barChartWitBoxPlot .axis text {
+        .barchartWitBoxPlot .axis text {
             fill: #525252;
             font: 13px "Futura",sans-serif;
         }
 
-        .barChartWitBoxPlot .axis path, .axis line {
+        .barchartWitBoxPlot .axis path, .axis line {
             fill: none;
             shape-rendering: crispedges;
             stroke: #dddddd;
         }
 
-        .barChartWitBoxPlot rect {
+        .barchartWitBoxPlot rect {
             cursor: pointer;
         }
     </style>
@@ -47,17 +39,42 @@
 <BODY>
 
 <div id="pageWrapper">
-    <div class="row col-md-11">
-        <div id="containerBarChart" class="col-md-9"></div>
+    <BR/>
+    <div class="row col-md-10">
+        <div id="containerBarchart" class="col-md-9"></div>
 
-        <div class="col-md-2">
+        <div class="col-md-1">
             <h2>Variables</h2>
             <div id="containerVariables"></div>
             <h2>Uncertainty</h2>
             <p><a id="buttonUncertainty" class="btn btn-primary" href="#" role="button">Display or Hide Uncertainty</a></p>
         </div>
     </div>
+    <div class="row col-md-10">
+    <pre>
+        Data structure sample :
+        data = [
+            {
+                Name : "Africa",
+                Data0 : {value : 68, uncertainty : 54},
+                Data1 : {value : 11, uncertainty : 3},
+                Data2 : {value : 107, uncertainty : 5},
+                Data3 : {value : 83, uncertainty : 24},
+            },
+            {
+                Name : "Africa",
+                Data0 : {value : 81, uncertainty : 7},
+                Data1 : {value : 15, uncertainty : 2},
+                Data2 : {value : 179, uncertainty : 78},
+                Data3 : {value : 64, uncertainty : 9},
+            },
+            ...
+        ]</pre>
+    </div>
+
+
 </div>
+
 
 <script type="text/javascript">
     function createRandomData(dataNumber)
@@ -87,15 +104,15 @@
 
         $(".variable").on("click", function()
         {
-            barChart.addOrRemoveToBarChart(this.id);
+            barchart.addOrRemoveToBarchart(this.id);
         })
     }
 
     // Action on uncertainty button
     $("#buttonUncertainty").on("click", function(d)
     {
-        barChart.changeDisplayUncertainty();
-        barChart.update();
+        barchart.changeDisplayUncertainty();
+        barchart.update();
     });
 
 
@@ -104,11 +121,11 @@
     var data = createRandomData(5);
 
     // Create barchart
-    var barChart = barCharWithBoxPlot("#containerBarChart", 500, 300, data);
-    var allVariables = barChart.getDisplayedVariables();
-    barChart.setDisplayedVariables(barChart.getDisplayedVariables().slice(0,3));
-    //    barChart.setKeyXAxe("Name");
-    barChart.create();
+    var barchart = barchartWithBoxPlot("#containerBarchart", 500, 300, data);
+    var allVariables = barchart.getDisplayedVariables();
+    barchart.setDisplayedVariables(barchart.getDisplayedVariables().slice(0,3));
+    //    barchart.setKeyXAxe("Name");
+    barchart.create();
 
     displayVariables(allVariables);
 </script>

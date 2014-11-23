@@ -1,7 +1,5 @@
-barCharWithBoxPlot = function(containerId, width, height, data)
+barchartWithBoxPlot = function(containerId, width, height, data)
 {
-    // TODO : revoir width & height
-
     var _chart = new Object();
     var _keyXAxe = "Name";
     var _variables = $.map(data[0], function(element, index) {
@@ -16,10 +14,11 @@ barCharWithBoxPlot = function(containerId, width, height, data)
     var _useRightYAxis = false;
     var _displayUncertainty = true;
 
-    var barCharMargin = {top: 10, right: 0, bottom: 75, left: 35};
+    var barchartMargin = {top: 10, right: 0, bottom: 75, left: 35};
     var colorArray=["#555555", "#009900", "#723E64", "#ff8c00", "#ff0000", "#a52a2a", "#cb6868", "#FFDF00", "#efe28a", "#66cdaa", "#77B5FE", "#4682b4", "#006400", "#32cd32"];
     var color = d3.scale.ordinal().domain( _displayedVariables ).range(colorArray);
-    var barChartObject = new Object();
+    var barchartObject = new Object();
+
 
 
     /*********************************/
@@ -57,66 +56,69 @@ barCharWithBoxPlot = function(containerId, width, height, data)
     /******** Public functions ********/
     /**********************************/
     /**
-     * This method create the svg container for the bar chart
+     * This method create the svg container for the barchart
      */
     _chart.create = function()
     {
-        var regionBarChartx0 = d3.scale.ordinal().rangeRoundBands( [0, width], 0.1 ).domain( _axeXData );
-        var regionBarChartx1 = d3.scale.ordinal();
-        var regionBarCharty = d3.scale.linear().range( [height, 0] );
+        var regionBarchartx0 = d3.scale.ordinal().rangeRoundBands( [0, width], 0.1 ).domain( _axeXData );
+        var regionBarchartx1 = d3.scale.ordinal();
+        var regionBarcharty = d3.scale.linear().range( [height, 0] );
 
         // Axes
-        var regionBarChartxAxis = d3.svg.axis().scale( regionBarChartx0 );
-        var regionBarChartyAxis = d3.svg.axis()
-            .scale( regionBarCharty )
+        var regionBarchartxAxis = d3.svg.axis().scale( regionBarchartx0 );
+        var regionBarchartyAxis = d3.svg.axis()
+            .scale( regionBarcharty )
             .orient( _useRightYAxis ? "right" : "left" )
             .tickFormat( d3.format( ".2s" ) )
             .tickSize( -width, 0 );
 
-        $( containerId ).addClass( "barChartWitBoxPlot" );
-        // BarChart
-        var regionBarChartsvg = d3.select( containerId ).append( "svg" )
-            .attr( "width", width + barCharMargin.left + barCharMargin.right )
-            .attr( "height", height + barCharMargin.top + barCharMargin.bottom )
+        $( containerId ).addClass( "barchartWitBoxPlot" );
+        // Barchart
+        var regionBarchartsvg = d3.select( containerId ).append( "svg" )
+            .attr( "width", width + barchartMargin.left + barchartMargin.right )
+            .attr( "height", height + barchartMargin.top + barchartMargin.bottom )
             .append( "g" )
-            .attr( "transform", "translate(" + (_useRightYAxis ? 0 : barCharMargin.left) + "," + barCharMargin.top + ")" );
+            .attr( "transform", "translate(" + (_useRightYAxis ? 0 : barchartMargin.left) + "," + barchartMargin.top + ")" );
 
-        var regionBarChartsvgG = regionBarChartsvg.append( "g" )
+        var regionBarchartsvgG = regionBarchartsvg.append( "g" )
             .attr( "class", "y axis" );
         if( _useRightYAxis )
-            regionBarChartsvgG.attr( "transform", "translate(" + width + ",0)" );
+            regionBarchartsvgG.attr( "transform", "translate(" + width + ",0)" );
 
-        regionBarChartsvgG.append( "text" )
+        regionBarchartsvgG.append( "text" )
             .attr( "transform", "rotate(-90)" )
             .attr( "y", 6 )
             .attr( "dy", ".7em" )
             .style( "text-anchor", "end" )
             .text( "" );
 
-        regionBarChartsvg.append( "g" )
+        regionBarchartsvg.append( "g" )
             .attr( "class", "x axis" )
             .attr( "transform", "translate(0," + height + ")" );
 
         // xAxis
-        regionBarChartsvg.select( '.x.axis' ).call( regionBarChartxAxis );
+        regionBarchartsvg.select( '.x.axis' ).call( regionBarchartxAxis );
 
-        barChartObject.width = width;
-        barChartObject.x0 = regionBarChartx0;
-        barChartObject.x1 = regionBarChartx1;
-        barChartObject.y = regionBarCharty;
-        barChartObject.xAxis = regionBarChartxAxis;
-        barChartObject.yAxis = regionBarChartyAxis;
-        barChartObject.svg = regionBarChartsvg;
-        barChartObject.useRightYAxis = _useRightYAxis;
+        barchartObject.width = width;
+        barchartObject.x0 = regionBarchartx0;
+        barchartObject.x1 = regionBarchartx1;
+        barchartObject.y = regionBarcharty;
+        barchartObject.xAxis = regionBarchartxAxis;
+        barchartObject.yAxis = regionBarchartyAxis;
+        barchartObject.svg = regionBarchartsvg;
+        barchartObject.useRightYAxis = _useRightYAxis;
 
-        updateBarChartAxes();
+        updateBarchartAxes();
         _chart.update();
     };
 
+    /**
+     *  This method update data with new data to display (after a remove or an add) and update the svg element
+     */
     _chart.update = function()
     {
         setColumnDetailsAndTotals();
-        updateBarChart();
+        updateBarchart();
     };
 
     _chart.changeDisplayUncertainty = function()
@@ -124,14 +126,17 @@ barCharWithBoxPlot = function(containerId, width, height, data)
         _displayUncertainty = !_displayUncertainty;
     };
 
-    _chart.addOrRemoveToBarChart = function( variableName )
+    /**
+     *  This method detects if the variable is already displayed in the barchart then remove or add it in the chart
+     */
+    _chart.addOrRemoveToBarchart = function( variableName )
     {
         _displayedVariables = _displayedVariables ? _displayedVariables : [];
         var isAlreadyInChart = (0 <= getIndexInArray( _displayedVariables, "name", variableName ));
         if( isAlreadyInChart )
-            removeToBarChart( variableName );
+            removeToBarchart( variableName );
         else
-            createOrAddToBarChart( variableName );
+            addToBarchart( variableName );
     };
 
 
@@ -139,8 +144,8 @@ barCharWithBoxPlot = function(containerId, width, height, data)
     /*********************************/
     /******* Private functions *******/
     /*********************************/
-    /*
-     This method creates details for each column
+    /**
+     * This method creates details for each column
      */
     function setColumnDetailsAndTotals()
     {
@@ -177,18 +182,24 @@ barCharWithBoxPlot = function(containerId, width, height, data)
         } );
     }
 
-    function updateBarChart()
+    /**
+     *  This method update all svg, DOM and content elements of the barchart (domain, axes, legend, ...)
+     */
+    function updateBarchart()
     {
-        updateBarChartDomains();
-        updateBarChartAxes();
-        updateBarChartBar();
-        updateBarChartUncertainty();
-        updateBarChartLegend();
+        updateBarchartDomains();
+        updateBarchartAxes();
+        updateBarchartBar();
+        updateBarchartUncertainty();
+        updateBarchartLegend();
     }
 
-    function updateBarChartDomains()
+    /**
+     *  This method update the domains for X and Y axes (after remove or add a variable)
+     */
+    function updateBarchartDomains()
     {
-        barChartObject.y.domain( [d3.min( data, function( d )
+        barchartObject.y.domain( [d3.min( data, function( d )
         {
             return d.negativeTotal;
         } ), d3.max( data, function( d )
@@ -196,15 +207,18 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             return d.positiveTotal;
         } )] );
 
-        barChartObject.x1.domain( d3.keys( _displayedVariables ) ).rangeRoundBands( [0, barChartObject.x0.rangeBand()] );
+        barchartObject.x1.domain( d3.keys( _displayedVariables ) ).rangeRoundBands( [0, barchartObject.x0.rangeBand()] );
     }
 
-    function updateBarChartAxes()
+    /**
+     *  This method update the X and Y axes (after remove or add a variable)
+     */
+    function updateBarchartAxes()
     {
         // Update yAxis
-        barChartObject.svg
+        barchartObject.svg
             .select( '.y.axis' )
-            .call( barChartObject.yAxis )
+            .call( barchartObject.yAxis )
             .selectAll( 'line' )
             .filter( function( d )
             {
@@ -213,7 +227,7 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             .classed( 'zero', true );
 
         // Rotate the x Axis labels
-        barChartObject.svg.selectAll( "g.x g text" )
+        barchartObject.svg.selectAll( "g.x g text" )
             .style( "text-anchor", "end" )
             .attr( "transform", "translate(-10,0)rotate(315)" )
             .text( function( d, i )
@@ -222,9 +236,12 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             } );
     }
 
-    function updateBarChartLegend()
+    /**
+      *  This method update the legends (after remove or add a variable)
+      */
+     function updateBarchartLegend()
     {
-        var legend = barChartObject.svg.selectAll( ".legend" )
+        var legend = barchartObject.svg.selectAll( ".legend" )
             .data(_displayedVariables);
 
         var legendsEnter = legend.enter().append( "g" )
@@ -233,14 +250,14 @@ barCharWithBoxPlot = function(containerId, width, height, data)
         legendsEnter.append( "rect" )
             .attr( "id", function( d, i )
             {
-                return "regionBarChartSvg_legendRect_" + i;
+                return "regionBarchartSvg_legendRect_" + i;
             } )
-            .attr( "x", barChartObject.width - 18 )
+            .attr( "x", barchartObject.width - 18 )
             .attr( "width", 10 )
             .attr( "height", 10 );
 
         legendsEnter.append( "text" )
-            .attr( "x", barChartObject.width - 24 )
+            .attr( "x", barchartObject.width - 24 )
             .attr( "y", 9 )
             .attr( "dy", 0 )
             .style( "text-anchor", "end" );
@@ -261,14 +278,14 @@ barCharWithBoxPlot = function(containerId, width, height, data)
                 return d.color;
             } )
             .style( "stroke", "#2C3537" )
-            .attr( "x", barChartObject.width - 18 )
+            .attr( "x", barchartObject.width - 18 )
             .on( "click", function( d )
             {
-                removeToBarChart( d.name);
+                removeToBarchart( d.name);
             } );
 
         legend.select( "text" ).transition().duration( 1000 ).ease( "linear" )
-            .attr( "x", barChartObject.width - 24 );
+            .attr( "x", barchartObject.width - 24 );
 
         legend.attr( "transform",function( d, i )
         {
@@ -276,16 +293,19 @@ barCharWithBoxPlot = function(containerId, width, height, data)
         });
     }
 
-    function updateBarChartBar()
+    /**
+      *  This method update the bars : height and width (after remove or add a variable)
+      */
+    function updateBarchartBar()
     {
-        var regionBar = barChartObject.svg.selectAll( ".groupedBar" )
+        var regionBar = barchartObject.svg.selectAll( ".groupedBar" )
             .data(data);
 
         var regionBarEnter = regionBar.enter().append( "g" )
             .attr( "class", "groupedBar" )
             .attr( "transform", function( d )
             {
-                return "translate(" + barChartObject.x0( d[_keyXAxe] ) + ",0)";
+                return "translate(" + barchartObject.x0( d[_keyXAxe] ) + ",0)";
             });
 
         var regionBarRect = regionBar.selectAll( "rect" )
@@ -297,7 +317,7 @@ barCharWithBoxPlot = function(containerId, width, height, data)
         regionBarRect.enter().append( "rect" )
             .on( "click", function( d )
             {
-                removeToBarChart( d.name );
+                removeToBarchart( d.name );
             });
 
         regionBarRect.exit().remove();
@@ -306,18 +326,18 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             .duration( 500 )
             .ease( "linear" )
             .selectAll( "rect" )
-            .attr( "width", barChartObject.x1.rangeBand() )
+            .attr( "width", barchartObject.x1.rangeBand() )
             .attr( "x", function( d )
             {
-                return barChartObject.x1( d.column );
+                return barchartObject.x1( d.column );
             })
             .attr( "y", function( d )
             {
-                return barChartObject.y( d.yEnd );
+                return barchartObject.y( d.yEnd );
             })
             .attr( "height", function( d )
             {
-                return barChartObject.y( d.yBegin ) - barChartObject.y( d.yEnd );
+                return barchartObject.y( d.yBegin ) - barchartObject.y( d.yEnd );
             } )
             .style( "fill", function( d )
             {
@@ -327,9 +347,12 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             });
     }
 
-    function updateBarChartUncertainty()
+    /**
+      *  This method display or hide uncertainty on each bars
+      */
+    function updateBarchartUncertainty()
     {
-        var regionBar = barChartObject.svg.selectAll( ".groupedBar" )
+        var regionBar = barchartObject.svg.selectAll( ".groupedBar" )
             .data( data );
 
         var regionBarPath = regionBar.selectAll( "path" )
@@ -347,14 +370,14 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             .selectAll( "path" )
             .attr( "d", function( d )
             {
-                var xCenter = barChartObject.x1( d.column ) + barChartObject.x1.rangeBand() / 2;
-                var lineWidth = barChartObject.x1.rangeBand() / 5;
-                var yTop = barChartObject.y( parseFloat( d.yEnd ) + parseFloat( d.uncertainty ) );
-                var yBottom = barChartObject.y( parseFloat( d.yEnd ) - parseFloat( d.uncertainty ) );
+                var xCenter = barchartObject.x1( d.column ) + barchartObject.x1.rangeBand() / 2;
+                var lineWidth = barchartObject.x1.rangeBand() / 5;
+                var yTop = barchartObject.y( parseFloat( d.yEnd ) + parseFloat( d.uncertainty ) );
+                var yBottom = barchartObject.y( parseFloat( d.yEnd ) - parseFloat( d.uncertainty ) );
                 if( 0 > d.yBegin )
                 {
-                    yTop = barChartObject.y( parseFloat( d.yBegin ) + parseFloat( d.uncertainty ) );
-                    yBottom = barChartObject.y( parseFloat( d.yBegin ) - parseFloat( d.uncertainty ) );
+                    yTop = barchartObject.y( parseFloat( d.yBegin ) + parseFloat( d.uncertainty ) );
+                    yBottom = barchartObject.y( parseFloat( d.yBegin ) - parseFloat( d.uncertainty ) );
                 }
 
                 if( _displayUncertainty && d.uncertainty )
@@ -372,7 +395,10 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             .attr( "stroke-width", 2);
     }
 
-    function removeToBarChart( variableName )
+    /**
+      *  This method remove a variable from the displayedVariable array and update the chart
+      */
+    function removeToBarchart( variableName )
     {
         var index = getIndexInArray( _displayedVariables, "name", variableName );
         if( 0 > index )
@@ -381,11 +407,13 @@ barCharWithBoxPlot = function(containerId, width, height, data)
         _chart.update();
     }
 
-    function createOrAddToBarChart( variableName )
+    /**
+      *  This method add a variable in the displayedVariable array and update the chart
+      */
+    function addToBarchart( variableName )
     {
         _displayedVariables.push( {name : variableName, color: false} );
         _chart.update();
-//        updateToolTipsForCharts();
     }
 
     return _chart;
