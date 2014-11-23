@@ -2,48 +2,66 @@ barCharWithBoxPlot = function(containerId, width, height, data)
 {
     // TODO : revoir width & height
 
-    // function() : private
-    // barCharWithBoxPlot = function() : public
     var _chart = new Object();
-    var displayedVariables = [];
-    displayedVariables = $.map(data[0], function(element,index) {return index});
-    var _regions = [];
+    var _keyXAxe = "Name";
+    var _variables = $.map(data[0], function(element, index) {
+        if(_keyXAxe != index )
+            return {name:index, color:false};
+    });
+    var _displayedVariables = _variables;
+    var _axeXData = $.map(data, function(element, index) {
+        if(_keyXAxe )
+            return element[_keyXAxe];
+    });
     var _useRightYAxis = false;
-    var barCharMargin = {top: 10, right: 0, bottom: 75, left: 35};
-    var regionBarChartObject = new Object();
-    var displayUncertainty = true;
-    var colorArray=["#555555", "#009900", "#723E64", "#ff8c00", "#ff0000", "#a52a2a", "#cb6868", "#FFDF00", "#efe28a", "#66cdaa", "#77B5FE", "#4682b4", "#006400", "#32cd32"]
-    var color = d3.scale.ordinal().domain( displayedVariables ).range(colorArray);
-    var fluxColName = "Name";
+    var _displayUncertainty = true;
 
+    var barCharMargin = {top: 10, right: 0, bottom: 75, left: 35};
+    var colorArray=["#555555", "#009900", "#723E64", "#ff8c00", "#ff0000", "#a52a2a", "#cb6868", "#FFDF00", "#efe28a", "#66cdaa", "#77B5FE", "#4682b4", "#006400", "#32cd32"];
+    var color = d3.scale.ordinal().domain( _displayedVariables ).range(colorArray);
+    var barChartObject = new Object();
+
+
+    /*********************************/
+    /******** Getters/Setters ********/
+    /*********************************/
 
     _chart.setUseRightYAxis = function( useRightYAxis )
     {
         _useRightYAxis = useRightYAxis;
     };
 
-
-    _chart.setRegions = function( data )
+    _chart.setAxeXData = function( data )
     {
-        _regions = data;
-    };
-//    _chart.elasticY = function (_) {
-//        if (!arguments.length) return _yElasticity;
-//        _yElasticity = _;
-//        return _chart;
-//    };
-
-    _chart.changeDisplayUncertainty = function()
-    {
-        displayUncertainty = !displayUncertainty;
+        _axeXData = data;
     };
 
+    _chart.setKeyXAxe = function(keyXAxeValue)
+    {
+        _keyXAxe = keyXAxeValue;
+    };
+
+    _chart.getDisplayedVariables= function()
+    {
+        return _displayedVariables;
+    };
+
+    _chart.setDisplayedVariables= function(displayedVariables)
+    {
+        _displayedVariables = displayedVariables;
+    };
+
+
+
+    /**********************************/
+    /******** Public functions ********/
+    /**********************************/
     /**
      * This method create the svg container for the bar chart
      */
     _chart.create = function()
     {
-        var regionBarChartx0 = d3.scale.ordinal().rangeRoundBands( [0, width], 0.1 ).domain( _regions );
+        var regionBarChartx0 = d3.scale.ordinal().rangeRoundBands( [0, width], 0.1 ).domain( _axeXData );
         var regionBarChartx1 = d3.scale.ordinal();
         var regionBarCharty = d3.scale.linear().range( [height, 0] );
 
@@ -82,33 +100,56 @@ barCharWithBoxPlot = function(containerId, width, height, data)
         // xAxis
         regionBarChartsvg.select( '.x.axis' ).call( regionBarChartxAxis );
 
-        regionBarChartObject.width = width;
-        regionBarChartObject.x0 = regionBarChartx0;
-        regionBarChartObject.x1 = regionBarChartx1;
-        regionBarChartObject.y = regionBarCharty;
-        regionBarChartObject.xAxis = regionBarChartxAxis;
-        regionBarChartObject.yAxis = regionBarChartyAxis;
-        regionBarChartObject.svg = regionBarChartsvg;
-        regionBarChartObject.useRightYAxis = _useRightYAxis;
+        barChartObject.width = width;
+        barChartObject.x0 = regionBarChartx0;
+        barChartObject.x1 = regionBarChartx1;
+        barChartObject.y = regionBarCharty;
+        barChartObject.xAxis = regionBarChartxAxis;
+        barChartObject.yAxis = regionBarChartyAxis;
+        barChartObject.svg = regionBarChartsvg;
+        barChartObject.useRightYAxis = _useRightYAxis;
 
-        updateRegionBarChartAxes();
-        updateDisplayedVariablesAndRegionBarCharts();
-//        return regionBarChartObject;
+        updateBarChartAxes();
+        _chart.update();
     };
 
     _chart.update = function()
     {
-        updateDisplayedVariablesAndRegionBarCharts();
+        setColumnDetailsAndTotals();
+        updateBarChart();
     };
 
+    _chart.changeDisplayUncertainty = function()
+    {
+        _displayUncertainty = !_displayUncertainty;
+    };
+
+    _chart.addOrRemoveToBarChart = function( variableName )
+    {
+        _displayedVariables = _displayedVariables ? _displayedVariables : [];
+        var isAlreadyInChart = (0 <= getIndexInArray( _displayedVariables, "name", variableName ));
+        if( isAlreadyInChart )
+            removeToBarChart( variableName );
+        else
+            createOrAddToBarChart( variableName );
+    };
+
+
+
+    /*********************************/
+    /******* Private functions *******/
+    /*********************************/
+    /*
+     This method creates details for each column
+     */
     function setColumnDetailsAndTotals()
     {
         data.forEach( function( d )
         {
             var index = 0;
-            d.columnDetails = displayedVariables.map( function( element, i )
+            d.columnDetails = _displayedVariables.map( function( element, i )
             {
-                var result = {name: element, column: index.toString(), yBegin: (0 > d[element].value ? d[element].value : 0), yEnd: (0 < d[element].value ? d[element].value : 0), uncertainty: d[element].uncertainty, color:false, region:d.Name};
+                var result = {name: element.name, column: index.toString(), yBegin: (0 > d[element.name].value ? d[element.name].value : 0), yEnd: (0 < d[element.name].value ? d[element.name].value : 0), uncertainty: d[element.name].uncertainty, color:false, region:d.Name};
                 index++;
                 return result;
             } );
@@ -120,7 +161,7 @@ barCharWithBoxPlot = function(containerId, width, height, data)
 
             d.negativeTotal = d3.min( d.columnDetails,function( d )
             {
-                if( displayUncertainty && d.uncertainty && !isNaN( parseFloat( d.uncertainty ) ) )
+                if( _displayUncertainty && d.uncertainty && !isNaN( parseFloat( d.uncertainty ) ) )
                     return d ? parseFloat( d.yBegin ) + parseFloat( d.uncertainty ) : 0;
                 else
                     return d ? parseFloat( d.yBegin ) : 0;
@@ -128,7 +169,7 @@ barCharWithBoxPlot = function(containerId, width, height, data)
 
             d.positiveTotal = d3.max( d.columnDetails, function( d )
             {
-                if( displayUncertainty && d.uncertainty && !isNaN( parseFloat( d.uncertainty ) ) )
+                if( _displayUncertainty && d.uncertainty && !isNaN( parseFloat( d.uncertainty ) ) )
                     return d ? parseFloat( d.yEnd ) + parseFloat( d.uncertainty ) : 0;
                 else
                     return d ? parseFloat( d.yEnd ) : 0;
@@ -136,28 +177,18 @@ barCharWithBoxPlot = function(containerId, width, height, data)
         } );
     }
 
-    function updateDisplayedVariablesAndRegionBarCharts()
+    function updateBarChart()
     {
-        // Create details for each column
-        setColumnDetailsAndTotals();
-//        regionBarChartObject.transposedData = this.transposedDataForMainFlux;
-
-        // Update region barcharts
-        updateRegionBarChart();
+        updateBarChartDomains();
+        updateBarChartAxes();
+        updateBarChartBar();
+        updateBarChartUncertainty();
+        updateBarChartLegend();
     }
 
-    function updateRegionBarChart()
+    function updateBarChartDomains()
     {
-        updateRegionBarChartDomains();
-        updateRegionBarChartAxes();
-        updateRegionBarChartBar();
-        updateRegionBarChartUncertainty();
-//        updateRegionBarChartLegend();
-    }
-
-    function updateRegionBarChartDomains()
-    {
-        regionBarChartObject.y.domain( [d3.min( data, function( d )
+        barChartObject.y.domain( [d3.min( data, function( d )
         {
             return d.negativeTotal;
         } ), d3.max( data, function( d )
@@ -165,15 +196,15 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             return d.positiveTotal;
         } )] );
 
-        regionBarChartObject.x1.domain( d3.keys( displayedVariables ) ).rangeRoundBands( [0, regionBarChartObject.x0.rangeBand()] );
+        barChartObject.x1.domain( d3.keys( _displayedVariables ) ).rangeRoundBands( [0, barChartObject.x0.rangeBand()] );
     }
 
-    function updateRegionBarChartAxes()
+    function updateBarChartAxes()
     {
         // Update yAxis
-        regionBarChartObject.svg
+        barChartObject.svg
             .select( '.y.axis' )
-            .call( regionBarChartObject.yAxis )
+            .call( barChartObject.yAxis )
             .selectAll( 'line' )
             .filter( function( d )
             {
@@ -182,7 +213,7 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             .classed( 'zero', true );
 
         // Rotate the x Axis labels
-        regionBarChartObject.svg.selectAll( "g.x g text" )
+        barChartObject.svg.selectAll( "g.x g text" )
             .style( "text-anchor", "end" )
             .attr( "transform", "translate(-10,0)rotate(315)" )
             .text( function( d, i )
@@ -191,88 +222,70 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             } );
     }
 
-//    updateRegionBarChartLegend: function( regionBarChartObject )
-//    {
-//        var legend = regionBarChartObject.svg.selectAll( ".legend" )
-//            .data( jQuery.proxy( function()
-//        {
-//            this.displayedVariables.slice();
-//            var result = new Array();
-//            $.each( this.displayedVariables, jQuery.proxy( function( i, d )
-//            {
-//                if( (regionBarChartObject.isForMainFlux && (-1 != this.mainFlux.indexOf( d.name ) ))
-//                    || (!regionBarChartObject.isForMainFlux && (-1 != this.separatedFlux.indexOf( d.name ) )) )
-//                    result.push( d );
-//            }, this ) );
-//            return result;
-//        }, this ) );
-//
-//        var legendsEnter = legend.enter().append( "g" )
-//            .attr( "class", "legend" );
-//
-//        legendsEnter.append( "rect" )
-//            .attr( "id", function( d, i )
-//            {
-//                return "regionBarChartSvg_legendRect_" + i;
-//            } )
-//            .attr( "x", regionBarChartObject.width - 18 )
-//            .attr( "width", 10 )
-//            .attr( "height", 10 );
-//
-//        legendsEnter.append( "text" )
-//            .attr( "x", regionBarChartObject.width - 24 )
-//            .attr( "y", 9 )
-//            .attr( "dy", 0 )
-//            .style( "text-anchor", "end" );
-//        legend.exit().remove();
-//
-//        // When remove bar
-//        legend.select( "text" )
-//            .text( jQuery.proxy( function( d )
-//        {
-//            var propertyName = this.getI18nPropertiesKeyFromValue( d.name );
-//            return (0 != jQuery.i18n.prop( propertyName + "_shortForAxis" ).indexOf( "[" )
-//                && -1 != jQuery.i18n.prop( "separatedFlux" ).indexOf( d.name )) ? jQuery.i18n.prop( propertyName + "_shortForAxis" ) : d.name;
-//        }, this ) );
-//
-//        legend.select( "rect" )
-//            .style( "fill", jQuery.proxy( function( d )
-//        {
-//            if( !d.color )
-//                d.color = this.color( d.name );
-//            return d.color;
-//        }, this ) )
-//            .style( "stroke", "#2C3537" )
-//            .attr( "x", regionBarChartObject.width - 18 )
-//            .on( "click", jQuery.proxy( function( d )
-//        {
-//            this.onClickRegionBarChart( d );
-//        }, this ) );
-//
-//        legend.select( "text" ).transition().duration( 1000 ).ease( "linear" )
-//            .attr( "x", regionBarChartObject.width - 24 );
-//
-//        legend.attr( "transform",
-//            jQuery.proxy( function( d, i )
-//            {
-//                var zeroLineTranslateValue = d3.select( "#regionBarChartForSeparatedFlux g.y.axis g line.zero" )[0][0];
-//                if( !regionBarChartObject.isForMainFlux && zeroLineTranslateValue && zeroLineTranslateValue.parentNode.attributes.transform.value && -1 != zeroLineTranslateValue.parentNode.attributes.transform.value.indexOf( "0,0" ) )
-//                    return "translate(0," + (this.barChartHeight - this.barCharMargin.bottom - this.barCharMargin.top * 3 + i * 15) + ")";
-//                else
-//                    return "translate(0," + i * 15 + ")";
-//            }, this ) );
-//    },
-
-    function updateRegionBarChartBar()
+    function updateBarChartLegend()
     {
-        var regionBar = regionBarChartObject.svg.selectAll( ".groupedBar" )
+        var legend = barChartObject.svg.selectAll( ".legend" )
+            .data(_displayedVariables);
+
+        var legendsEnter = legend.enter().append( "g" )
+            .attr( "class", "legend" );
+
+        legendsEnter.append( "rect" )
+            .attr( "id", function( d, i )
+            {
+                return "regionBarChartSvg_legendRect_" + i;
+            } )
+            .attr( "x", barChartObject.width - 18 )
+            .attr( "width", 10 )
+            .attr( "height", 10 );
+
+        legendsEnter.append( "text" )
+            .attr( "x", barChartObject.width - 24 )
+            .attr( "y", 9 )
+            .attr( "dy", 0 )
+            .style( "text-anchor", "end" );
+        legend.exit().remove();
+
+        // When remove bar
+        legend.select( "text" )
+            .text( function( d )
+            {
+                return d.name;
+            });
+
+        legend.select( "rect" )
+            .style( "fill", function( d )
+            {
+                if( !d.color )
+                    d.color = color( d.name );
+                return d.color;
+            } )
+            .style( "stroke", "#2C3537" )
+            .attr( "x", barChartObject.width - 18 )
+            .on( "click", function( d )
+            {
+                removeToBarChart( d.name);
+            } );
+
+        legend.select( "text" ).transition().duration( 1000 ).ease( "linear" )
+            .attr( "x", barChartObject.width - 24 );
+
+        legend.attr( "transform",function( d, i )
+        {
+            return "translate(0," + i * 15 + ")";
+        });
+    }
+
+    function updateBarChartBar()
+    {
+        var regionBar = barChartObject.svg.selectAll( ".groupedBar" )
             .data(data);
 
         var regionBarEnter = regionBar.enter().append( "g" )
             .attr( "class", "groupedBar" )
             .attr( "transform", function( d )
             {
-                return "translate(" + regionBarChartObject.x0( d[fluxColName] ) + ",0)";
+                return "translate(" + barChartObject.x0( d[_keyXAxe] ) + ",0)";
             });
 
         var regionBarRect = regionBar.selectAll( "rect" )
@@ -284,7 +297,7 @@ barCharWithBoxPlot = function(containerId, width, height, data)
         regionBarRect.enter().append( "rect" )
             .on( "click", function( d )
             {
-//            onClickRegionBarChart( d );
+                removeToBarChart( d.name );
             });
 
         regionBarRect.exit().remove();
@@ -293,18 +306,18 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             .duration( 500 )
             .ease( "linear" )
             .selectAll( "rect" )
-            .attr( "width", regionBarChartObject.x1.rangeBand() )
+            .attr( "width", barChartObject.x1.rangeBand() )
             .attr( "x", function( d )
             {
-                return regionBarChartObject.x1( d.column );
+                return barChartObject.x1( d.column );
             })
             .attr( "y", function( d )
             {
-                return regionBarChartObject.y( d.yEnd );
+                return barChartObject.y( d.yEnd );
             })
             .attr( "height", function( d )
             {
-                return regionBarChartObject.y( d.yBegin ) - regionBarChartObject.y( d.yEnd );
+                return barChartObject.y( d.yBegin ) - barChartObject.y( d.yEnd );
             } )
             .style( "fill", function( d )
             {
@@ -314,9 +327,9 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             });
     }
 
-    function updateRegionBarChartUncertainty()
+    function updateBarChartUncertainty()
     {
-        var regionBar = regionBarChartObject.svg.selectAll( ".groupedBar" )
+        var regionBar = barChartObject.svg.selectAll( ".groupedBar" )
             .data( data );
 
         var regionBarPath = regionBar.selectAll( "path" )
@@ -334,17 +347,17 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             .selectAll( "path" )
             .attr( "d", function( d )
             {
-                var xCenter = regionBarChartObject.x1( d.column ) + regionBarChartObject.x1.rangeBand() / 2;
-                var lineWidth = regionBarChartObject.x1.rangeBand() / 5;
-                var yTop = regionBarChartObject.y( parseFloat( d.yEnd ) + parseFloat( d.uncertainty ) );
-                var yBottom = regionBarChartObject.y( parseFloat( d.yEnd ) - parseFloat( d.uncertainty ) );
+                var xCenter = barChartObject.x1( d.column ) + barChartObject.x1.rangeBand() / 2;
+                var lineWidth = barChartObject.x1.rangeBand() / 5;
+                var yTop = barChartObject.y( parseFloat( d.yEnd ) + parseFloat( d.uncertainty ) );
+                var yBottom = barChartObject.y( parseFloat( d.yEnd ) - parseFloat( d.uncertainty ) );
                 if( 0 > d.yBegin )
                 {
-                    yTop = regionBarChartObject.y( parseFloat( d.yBegin ) + parseFloat( d.uncertainty ) );
-                    yBottom = regionBarChartObject.y( parseFloat( d.yBegin ) - parseFloat( d.uncertainty ) );
+                    yTop = barChartObject.y( parseFloat( d.yBegin ) + parseFloat( d.uncertainty ) );
+                    yBottom = barChartObject.y( parseFloat( d.yBegin ) - parseFloat( d.uncertainty ) );
                 }
 
-                if( displayUncertainty && d.uncertainty )
+                if( _displayUncertainty && d.uncertainty )
                     return "M" + (xCenter - lineWidth) + "," + yBottom + "L" + (xCenter + lineWidth) + "," + yBottom + "M" + xCenter + "," + yBottom +
                         "L" + xCenter + "," + yTop + "M" + (xCenter - lineWidth) + "," + yTop + "L" + (xCenter + lineWidth) + "," + yTop;
                 else
@@ -359,51 +372,21 @@ barCharWithBoxPlot = function(containerId, width, height, data)
             .attr( "stroke-width", 2);
     }
 
-//    onClickRegionBarChart: function( element )
-//    {
-//        var dynamicAreaDivId = this.getI18nPropertiesKeyFromValue( element.name );
-//        $( "#" + dynamicAreaDivId ).removeClass( "selected" );
-//        this.removeToRegionBarChart( element.name );
-//        this.fluxBarChartForMainFlux.onClick( {key: element.name} );
-//        this.fluxBarChartForSeparatedFlux.onClick( {key: element.name} );
-//    },
+    function removeToBarChart( variableName )
+    {
+        var index = getIndexInArray( _displayedVariables, "name", variableName );
+        if( 0 > index )
+            return;
+        _displayedVariables.splice( index, 1 );
+        _chart.update();
+    }
 
-//    removeToRegionBarChart: function( fluxName )
-//    {
-//        var index = getIndexInArray( this.displayedVariables, "name", fluxName );
-//        if( 0 > index )
-//            return;
-//        this.displayedVariables.splice( index, 1 );
-//        this.updateDisplayedVariablesAndRegionBarCharts( fluxName );
-//    },
-
-
-//    addOrRemoveToRegionBarChart: function( dynamicAreaDiv, fluxName )
-//    {
-//        this.displayedVariables = this.displayedVariables ? this.displayedVariables : [];
-//        var isAlreadyAChart = (0 <= getIndexInArray( this.displayedVariables, "name", fluxName ));
-//        isAlreadyAChart ? $( dynamicAreaDiv ).removeClass( "selected" ) : $( dynamicAreaDiv ).addClass( "selected" );
-//        if( isAlreadyAChart )
-//            this.removeToRegionBarChart( fluxName );
-//        else
-//            this.createOrAddToBarChart( fluxName );
-//    },
-
-//    createOrAddToBarChart: function( fluxValue )
-//    {
-//        if( 0 >= $( "#regionBarChart div svg" ).length )
-//        {
-//            var regionBarChartHeight = this.barChartHeight - this.barCharMargin.top - this.barCharMargin.bottom;
-//
-//            this.regionBarChartForMainFlux = this.createBarChart( "#regionBarChartForMainFlux", $( "#regionBarChartForMainFlux" ).width() - this.barCharMargin.left, regionBarChartHeight, false, true );
-//            this.regionBarChartForSeparatedFlux = this.createBarChart( "#regionBarChartForSeparatedFlux", $( "#regionBarChartForSeparatedFlux" ).width() - this.barCharMargin.left, regionBarChartHeight, true, false );
-//        }
-//        this.displayedVariables.push( {name : fluxValue, color: false} );
-//        this.updateDisplayedVariablesAndRegionBarCharts( fluxValue );
-//        this.updateToolTipsForCharts();
-//    },
-
-
+    function createOrAddToBarChart( variableName )
+    {
+        _displayedVariables.push( {name : variableName, color: false} );
+        _chart.update();
+//        updateToolTipsForCharts();
+    }
 
     return _chart;
 };
@@ -434,4 +417,24 @@ function ColorLuminance( hex, lum )
     }
 
     return rgb;
+}
+
+/**
+ * This method find the value "valueToFind" in the object's array "array" with the parameter "parameter" and returns its index.
+ * @param array
+ * @param parameter
+ * @param valueToFind
+ */
+function getIndexInArray( array, parameter, valueToFind )
+{
+    var result = -1;
+    $.each( array, function( i, d )
+    {
+        if( d[parameter] == valueToFind )
+        {
+            result = i;
+            return false;
+        }
+    } );
+    return result;
 }
