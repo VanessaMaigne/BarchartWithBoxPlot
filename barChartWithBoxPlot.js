@@ -1,3 +1,32 @@
+/*!
+ * barchartWithBoxPlot _ version 1.0 _ november 2014
+ * This library create a barchart with box plot.
+ * You can choose which variables you want to display, by adding or remove one by one.
+ * You can display or hide uncertaint (box plot).
+ *
+ * @param containerId : id of the barchart container
+ * @param width & height : width & height of the barchart, we substract some margin to display axes labels by using the variable "barchartMargin"
+ * @param data : data of the barchart
+ * Data structure sample :
+ *  data = [
+ *           {
+ *               Name : "Africa",
+ *               Data0 : {value : 68, uncertainty : 54},
+ *               Data1 : {value : 11, uncertainty : 3},
+ *               Data2 : {value : 107, uncertainty : 5},
+ *               Data3 : {value : 83, uncertainty : 24},
+ *           },
+ *           {
+ *               Name : "Africa",
+ *               Data0 : {value : 81, uncertainty : 7},
+ *               Data1 : {value : 15, uncertainty : 2},
+ *               Data2 : {value : 179, uncertainty : 78},
+ *               Data3 : {value : 64, uncertainty : 9},
+ *           },
+ *           ...
+ *       ]
+ */
+
 barchartWithBoxPlot = function(containerId, width, height, data)
 {
     var _chart = new Object();
