@@ -10,8 +10,23 @@
     <link rel="stylesheet" type="text/css" href="http://getbootstrap.com/dist/css/bootstrap.min.css">
 
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type="text/javascript" src="d3.v3.min.js"></script>
+    <script type="text/javascript" src="barChartWithBoxPlot.js"></script>
 
     <style type="text/css">
+        #pageWrapper {
+            margin: auto;
+            width: 1000px;
+        }
+
+        #containerBarChart {
+            /*background-color: red;*/
+        }
+
+        #containerVariables {
+            /*background-color: blue;*/
+        }
+
         h3 {
             color: #5BC0DE;
         }
@@ -19,32 +34,90 @@
         h4 {
             text-align: center;
         }
+
+            /*.barChartWitBoxPlot {*/
+            /*background-color: red;*/
+            /*}*/
+
+        .barChartWitBoxPlot .axis text {
+            fill: #525252;
+            font: 13px "Futura",sans-serif;
+        }
+
+        .barChartWitBoxPlot .axis path, .axis line {
+            fill: none;
+            shape-rendering: crispedges;
+            stroke: #dddddd;
+        }
     </style>
 </HEAD>
 
 <BODY>
 
 <div id="pageWrapper">
-    <div class="row">
-        <div class="col-sm-3 col-md-2 leftMenu">
-        <div class="col-sm-9 col-md-10">
-            <h1 class="page-header">Example of barchart with box plot.</h1>
+    <div class="row col-md-12">
+        <h1 class="page-header">Example of barchart with box plot.</h1>
 
-            <h2 class="sub-header">Content</h2>
+        <div id="containerBarChart" class="col-md-9"></div>
 
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce eu fringilla lacus, nec euismod sem. Phasellus eu ante tempor, elementum neque tristique,
-                venenatis erat. Duis iaculis metus vel lorem ornare, a luctus velit ultricies. Cras faucibus quis quam tempor tincidunt. In sed porta risus. Aliquam
-                laoreet, justo vel consectetur sodales, erat mi varius nulla, eget malesuada mauris orci dictum neque. Quisque vel magna convallis, fermentum tellus sed,
-                tincidunt tellus. Cras diam arcu, eleifend vitae rutrum at, tincidunt eu metus. Pellentesque ornare arcu varius, hendrerit neque in, tempus odio. Cras
-                varius dignissim porttitor. Nulla eu est quis turpis convallis fringilla. </p>
-
-            <p><a id="buttonAction" class="btn btn-default" href="#" role="button">Button Action</a></p>
-
+        <div class="col-md-3">
+            <h2>Variables</h2>
+            <div id="containerVariables" class="col-md-3"></div>
+            <h2>Uncertainty</h2>
+            <p><a id="buttonUncertainty" class="btn btn-primary" href="#" role="button">Display or Hide Uncertainty</a></p>
         </div>
     </div>
 </div>
 
 <script type="text/javascript">
+    function createData(dataNumber)
+    {
+        var data = [];
+        $.each(regions, function(i,d)
+        {
+            var obj = new Object();
+            obj.Name = d;
+            for (var ii=0; ii< dataNumber; ii++)
+            {
+                var randomValue =   Math.floor((Math.random() * 100) + 1);
+                var randomUncertainty = Math.floor((Math.random() * randomValue) + 1);
+                obj["Data"+ii] = {"value" : randomValue, "uncertainty" : randomUncertainty };
+            }
+            data.push(obj);
+        });
+        return data;
+    }
+
+    function displayVariables(data)
+    {
+        var keys = $.map(data[0], function(element,index) {return index});
+        $.each(keys, function(i,d)
+        {
+            if(d!="Name")
+                $("#containerVariables").append('<a class="btn btn-default variable" href="#" role="button">'+d+'</a>');
+        });
+
+        $(".variable").on("click", function(d)
+        {
+//            barChart.add
+        })
+    }
+
+    $("#buttonUncertainty").on("click", function(d)
+    {
+        barChart.changeDisplayUncertainty();
+//        this.updateFluxBarCharts();
+        barChart.update();
+
+    });
+
+    var regions = ["Africa", "America", "Asia", "Australia", "Europe", "Russia"];
+    var data = createData(5);
+    displayVariables(data);
+
+    var barChart = barCharWithBoxPlot("#containerBarChart", 500, 300, data);
+    barChart.setRegions(regions);
+    barChart.create();
 </script>
 </BODY>
 </HTML>
