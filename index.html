@@ -14,14 +14,9 @@
     <script type="text/javascript" src="barchartWithBoxPlot.js"></script>
 
     <style type="text/css">
-        #pageWrapper {
-            margin: auto;
-            width: 1000px;
-        }
-
         .barchartWitBoxPlot .axis text {
             fill: #525252;
-            font: 13px "Futura",sans-serif;
+            font: 13px "Futura", sans-serif;
         }
 
         .barchartWitBoxPlot .axis path, .axis line {
@@ -38,25 +33,23 @@
 
 <BODY>
 
-<div id="pageWrapper">
+<div class="container-fluid">
     <BR/>
-    <div class="row col-sm-12 col-md-12">
-        <!--Github link-->
-        <a href="https://github.com/VanessaMaigne/Help" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;"
-                                                                             src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67"
-                                                                             alt="Fork me on GitHub"
-                                                                             data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
 
-        <div id="containerBarchart" class="col-sm-8 col-md-8"></div>
+    <div class="col-sm-12 col-md-12">
+        <div id="containerBarchart" class="col-sm-7 col-md-7"></div>
 
-        <div class="col-sm-4 col-md-4">
+        <div class="col-sm-3 col-md-3">
             <h2>Variables</h2>
+
             <div id="containerVariables"></div>
             <h2>Uncertainty</h2>
+
             <p><a id="buttonUncertainty" class="btn btn-primary" href="#" role="button">Display or Hide Uncertainty</a></p>
         </div>
     </div>
-    <div class="row col-sm-12 col-md-12">
+
+    <div class="col-sm-12 col-md-12">
     <pre>
         Data structure sample :
         data = [
@@ -78,62 +71,69 @@
         ]</pre>
     </div>
 
+    <!--Github link-->
+    <div style="position: absolute; right: 30px;">
+        <a href="https://github.com/VanessaMaigne/BarchartWithBoxPlot" target="_blank">
+            <img src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67"
+                 alt="Fork me on GitHub"
+                 data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
+    </div>
 
 </div>
 
 
 <script type="text/javascript">
-    function createRandomData(dataNumber)
+    function createRandomData( dataNumber )
     {
         var data = [];
-        $.each(regions, function(i,d)
+        $.each( regions, function( i, d )
         {
             var obj = new Object();
             obj.Name = d;
-            for (var ii=0; ii< dataNumber; ii++)
+            for( var ii = 0; ii < dataNumber; ii++ )
             {
-                var randomValue =   Math.floor((Math.random() * 100) + 1);
-                var randomUncertainty = Math.floor((Math.random() * randomValue) + 1);
-                obj["Data"+ii] = {"value" : randomValue, "uncertainty" : randomUncertainty };
+                var randomValue = Math.floor( (Math.random() * 100) + 1 );
+                var randomUncertainty = Math.floor( (Math.random() * randomValue) + 1 );
+                obj["Data" + ii] = {"value" : randomValue, "uncertainty" : randomUncertainty };
             }
-            data.push(obj);
-        });
+            data.push( obj );
+        } );
         return data;
     }
 
-    function displayVariables(variables)
+    function displayVariables( variables )
     {
-        $.each(variables, function(i,d)
+        $.each( variables, function( i, d )
         {
-            $("#containerVariables").append('<a id="'+d.name+'" class="btn btn-default variable" href="#" role="button">'+d.name+'</a>');
-        });
+            $( "#containerVariables" ).append( '<a id="' + d.name + '" class="btn btn-default variable" href="#" role="button">' + d.name + '</a>' );
+        } );
 
-        $(".variable").on("click", function()
+        $( ".variable" ).on( "click", function()
         {
-            barchart.addOrRemoveToBarchart(this.id);
-        })
+            barchart.addOrRemoveToBarchart( this.id );
+        } )
     }
 
     // Action on uncertainty button
-    $("#buttonUncertainty").on("click", function(d)
+    $( "#buttonUncertainty" ).on( "click", function( d )
     {
         barchart.changeDisplayUncertainty();
         barchart.update();
-    });
+    } );
 
 
     // Data
     var regions = ["Africa", "America", "Asia", "Australia", "Europe", "Russia"];
-    var data = createRandomData(5);
+    var data = createRandomData( 5 );
 
     // Create barchart
-    var barchart = barchartWithBoxPlot("#containerBarchart", 400, 300, data);
+    var barchart = barchartWithBoxPlot( "#containerBarchart", 400, 300, data );
     var allVariables = barchart.getDisplayedVariables();
-    barchart.setDisplayedVariables(barchart.getDisplayedVariables().slice(0,3));
+    barchart.setDisplayedVariables( barchart.getDisplayedVariables().slice( 0, 3 ) );
     //    barchart.setKeyXAxe("Name");
     barchart.create();
 
-    displayVariables(allVariables);
+    displayVariables( allVariables );
 </script>
 </BODY>
 </HTML>
